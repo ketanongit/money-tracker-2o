@@ -3,11 +3,15 @@
 import { useEffect, useState } from 'react';
 import { EmailMessage } from '@/lib/email';
 import EmailItem from './TransactionItem';
+import TotalSummary from './TotalSummary';
+import { parseHDFCTransaction } from '@/lib/emailParser';
 
 export default function EmailList() {
   const [emails, setEmails] = useState<EmailMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [totalCredit, setTotalCredit] = useState(0);
+  const [totalDebit, setTotalDebit] = useState(0);
 
   useEffect(() => {
     const fetchEmails = async () => {
@@ -16,6 +20,26 @@ export default function EmailList() {
         if (!response.ok) throw new Error('Failed to fetch emails');
         const data = await response.json();
         setEmails(data);
+        
+        // Calculate totals
+        let creditSum = 0;
+        let debitSum = 0;
+        
+        data.forEach((email: EmailMessage) => {
+          if (email.html) {
+            const transaction = parseHDFCTransaction(email.html);
+            if (transaction) {
+              if (transaction.type === 'CREDIT') {
+                creditSum += transaction.amount;
+              } else {
+                debitSum += transaction.amount;
+              }
+            }
+          }
+        });
+        
+        setTotalCredit(creditSum);
+        setTotalDebit(debitSum);
         
         if (data.length === 0) {
           setError('No HDFC Bank alert emails found in your inbox');
@@ -57,21 +81,24 @@ export default function EmailList() {
   }
 
   return (
-    <div className="space-y-4">
-      {emails.length > 0 ? (
-        <>
-          <p className="text-sm text-gray-600 mb-4">
-            Found {emails.length} email{emails.length === 1 ? '' : 's'} from HDFC Bank
-          </p>
-          {emails.map((email) => (
-            <EmailItem key={email.id} email={email} />
-          ))}
-        </>
-      ) : (
-        <div className="text-center py-8">
-          <p className="text-gray-500">No HDFC Bank alerts found</p>
-        </div>
-      )}
+    <div>
+      {emails.length > 0 && <TotalSummary totalCredit={totalCredit} totalDebit={totalDebit} />}
+      <div className="space-y-4">
+        {emails.length > 0 ? (
+          <>
+            <p className="text-sm text-gray-600 mb-4">
+              Found {emails.length} email{emails.length === 1 ? '' : 's'} from HDFC Bank
+            </p>
+            {emails.map((email) => (
+              <EmailItem key={email.id} email={email} />
+            ))}
+          </>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-gray-500">No HDFC Bank alerts found</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
