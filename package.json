@@ -9,7 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
     "@types/imapflow": "^1.0.19",
+    "dotenv": "^16.4.7",
+    "drizzle-orm": "^0.39.3",
     "imapflow": "^1.0.181",
     "next": "15.1.7",
     "react": "^19.0.0",
@@ -21,6 +24,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "drizzle-kit": "^0.30.4",
     "eslint": "^9",
     "eslint-config-next": "15.1.7",
     "mailparser": "^3.7.2",

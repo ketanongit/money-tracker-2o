@@ -1,5 +1,6 @@
 import { ImapFlow } from 'imapflow';
 import { simpleParser } from 'mailparser';
+import { getCurrentMonthRange } from './dateUtils';
 
 export interface EmailMessage {
   id: string;
@@ -23,16 +24,18 @@ export async function fetchEmails(): Promise<EmailMessage[]> {
   });
 
   const emails: EmailMessage[] = [];
+  const { firstDay, lastDay } = getCurrentMonthRange();
 
   try {
     await client.connect();
     const lock = await client.getMailboxLock('INBOX');
 
     try {
-      // Search for emails from alerts@hdfcbank.net
+      // Search for emails within current month
       const search = await client.search({
         from: 'alerts@hdfcbank.net',
-        since: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // last 30 days
+        since: firstDay,
+        before: lastDay
       });
 
       if (search.length > 0) {

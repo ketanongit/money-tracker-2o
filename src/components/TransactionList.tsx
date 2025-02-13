@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { EmailMessage } from '@/lib/email';
+import { formatMonthYear } from '@/lib/dateUtils';
 import EmailItem from './TransactionItem';
 import TotalSummary from './TotalSummary';
 import { parseHDFCTransaction } from '@/lib/emailParser';
@@ -12,6 +13,7 @@ export default function EmailList() {
   const [error, setError] = useState<string | null>(null);
   const [totalCredit, setTotalCredit] = useState(0);
   const [totalDebit, setTotalDebit] = useState(0);
+  const [currentMonth, setCurrentMonth] = useState(formatMonthYear(new Date()));
 
   useEffect(() => {
     const fetchEmails = async () => {
@@ -44,6 +46,7 @@ export default function EmailList() {
         if (data.length === 0) {
           setError('No HDFC Bank alert emails found in your inbox');
         }
+        setCurrentMonth(formatMonthYear(new Date()));
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -52,6 +55,17 @@ export default function EmailList() {
     };
 
     fetchEmails();
+
+    // Set up automatic refresh at the start of each month
+    const now = new Date();
+    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const timeUntilNextMonth = nextMonth.getTime() - now.getTime();
+
+    const refreshTimer = setTimeout(() => {
+      fetchEmails();
+    }, timeUntilNextMonth);
+
+    return () => clearTimeout(refreshTimer);
   }, []);
 
   if (loading) {
@@ -82,6 +96,9 @@ export default function EmailList() {
 
   return (
     <div>
+      <h2 className="text-xl font-semibold text-gray-700 mb-4">
+        Transactions for {currentMonth}
+      </h2>
       {emails.length > 0 && <TotalSummary totalCredit={totalCredit} totalDebit={totalDebit} />}
       <div className="space-y-4">
         {emails.length > 0 ? (
