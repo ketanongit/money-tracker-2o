@@ -1,0 +1,1 @@
+ALTER TABLE "budgets" ADD CONSTRAINT "budgets_month_year_unique" UNIQUE("month_year");

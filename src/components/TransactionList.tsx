@@ -14,20 +14,31 @@ export default function EmailList() {
   const [totalCredit, setTotalCredit] = useState(0);
   const [totalDebit, setTotalDebit] = useState(0);
   const [currentMonth, setCurrentMonth] = useState(formatMonthYear(new Date()));
+  const [budget, setBudget] = useState(0);
 
   useEffect(() => {
-    const fetchEmails = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('/api/transactions');
-        if (!response.ok) throw new Error('Failed to fetch emails');
-        const data = await response.json();
-        setEmails(data);
-        
+        const [emailsResponse, budgetResponse] = await Promise.all([
+          fetch('/api/transactions'),
+          fetch('/api/budget')
+        ]);
+
+        if (!emailsResponse.ok || !budgetResponse.ok) {
+          throw new Error('Failed to fetch data');
+        }
+
+        const emailsData = await emailsResponse.json();
+        const budgetData = await budgetResponse.json();
+
+        setEmails(emailsData);
+        setBudget(Number(budgetData.amount));
+
         // Calculate totals
         let creditSum = 0;
         let debitSum = 0;
         
-        data.forEach((email: EmailMessage) => {
+        emailsData.forEach((email: EmailMessage) => {
           if (email.html) {
             const transaction = parseHDFCTransaction(email.html);
             if (transaction) {
@@ -43,7 +54,7 @@ export default function EmailList() {
         setTotalCredit(creditSum);
         setTotalDebit(debitSum);
         
-        if (data.length === 0) {
+        if (emailsData.length === 0) {
           setError('No HDFC Bank alert emails found in your inbox');
         }
         setCurrentMonth(formatMonthYear(new Date()));
@@ -54,7 +65,7 @@ export default function EmailList() {
       }
     };
 
-    fetchEmails();
+    fetchData();
 
     // Set up automatic refresh at the start of each month
     const now = new Date();
@@ -62,11 +73,26 @@ export default function EmailList() {
     const timeUntilNextMonth = nextMonth.getTime() - now.getTime();
 
     const refreshTimer = setTimeout(() => {
-      fetchEmails();
+      fetchData();
     }, timeUntilNextMonth);
 
     return () => clearTimeout(refreshTimer);
   }, []);
+
+  const handleBudgetUpdate = async (amount: number) => {
+    try {
+      const response = await fetch('/api/budget', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount }),
+      });
+
+      if (!response.ok) throw new Error('Failed to update budget');
+      setBudget(amount);
+    } catch (err) {
+      console.error('Failed to update budget:', err);
+    }
+  };
 
   if (loading) {
     return (
@@ -99,7 +125,14 @@ export default function EmailList() {
       <h2 className="text-xl font-semibold text-gray-700 mb-4">
         Transactions for {currentMonth}
       </h2>
-      {emails.length > 0 && <TotalSummary totalCredit={totalCredit} totalDebit={totalDebit} />}
+      {emails.length > 0 && (
+        <TotalSummary
+          totalCredit={totalCredit}
+          totalDebit={totalDebit}
+          budget={budget}
+          onBudgetUpdate={handleBudgetUpdate}
+        />
+      )}
       <div className="space-y-4">
         {emails.length > 0 ? (
           <>

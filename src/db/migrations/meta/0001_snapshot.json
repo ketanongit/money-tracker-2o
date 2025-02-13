@@ -1,6 +1,6 @@
 {
-  "id": "48b936ac-0709-4d3c-924c-2468c0ee1029",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "d674e1b3-e69c-47bd-b548-f6c337aaabdd",
+  "prevId": "48b936ac-0709-4d3c-924c-2468c0ee1029",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -44,7 +44,15 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "budgets_month_year_unique": {
+          "name": "budgets_month_year_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "month_year"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
