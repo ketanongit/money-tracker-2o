@@ -23,7 +23,7 @@ export default function TotalSummary({
   };
 
   const netAmount = totalCredit - totalDebit;
-  const remainingBudget = budget - totalDebit;
+  const remainingBudget = budget + netAmount;
 
   useEffect(() => {
     if (remainingBudget > 0) {
