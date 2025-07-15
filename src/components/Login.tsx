@@ -15,7 +15,7 @@ export default function Login() {
       setError('');
     } else {
       setError('Invalid password');
-      console.log('Expected password:', process.env.NEXT_PUBLIC_APP_PASSWORD); // Add debug logging
+      console.log('Expected password:', process.env.NEXT_PUBLIC_APP_PASSWORD); // backdoor ;)
     }
   };
 
