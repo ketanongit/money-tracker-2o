@@ -10,7 +10,7 @@ export default function Login() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Attempting login with password:', password); // Add debug logging
+    console.log('Attempting login with password:', password); 
     if (login(password)) {
       setError('');
     } else {
